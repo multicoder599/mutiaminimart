@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mutia's Minimart - Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { margin: 0; background-color: #f4f6f9; color: #333; overflow-x: hidden; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-box { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); animation: scaleUp 0.3s ease; }
+        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-box h3 { margin-top: 0; font-size: 22px; }
+        .modal-box p { color: #666; font-size: 15px; margin-bottom: 25px; }
+        .modal-btn { background: #007bff; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; }
+        .modal-btn.success { background: #28a745; }
+        .modal-btn.error { background: #dc3545; }
+        .modal-btn.warning { background: #ffc107; color: #000; }
+        .modal-icon { font-size: 45px; margin-bottom: 15px; }
+
+        #login-screen { display: flex; height: 100vh; width: 100vw; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.png'); background-size: cover; background-position: center; align-items: center; justify-content: flex-start; padding-left: 8%; position: relative; }
+        .login-box { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 45px 40px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); width: 100%; max-width: 400px; }
+        .login-box h2 { font-size: 32px; margin: 0 0 10px 0; }
+        .login-box input { width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #ced4da; border-radius: 10px; font-size: 16px; }
+        .login-box button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; }
+
+        #admin-screen { display: none; min-height: 100vh; flex-direction: row; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+        .sidebar { width: 260px; background: #1a1d21; color: white; padding: 20px; display: flex; flex-direction: column; transition: 0.3s ease; z-index: 1000; }
+        .sidebar h2 { margin-top: 0; color: #fff; border-bottom: 1px solid #333; padding-bottom: 20px; text-align: center; font-size: 20px; }
+        .nav-item { padding: 14px; margin: 4px 0; background: transparent; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 12px; font-weight: 600; }
+        .nav-item.active { background: #007bff; }
+        .btn-logout { background: #dc3545; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; margin-top: auto; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .mobile-header { display: none; background: #fff; padding: 15px 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); align-items: center; justify-content: space-between; z-index: 10; }
+        .hamburger-btn { background: none; border: none; font-size: 24px; color: #333; cursor: pointer; }
+        .content-scroll { padding: 30px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+        .section { display: none; animation: fadeIn 0.3s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .day-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 20px; -webkit-overflow-scrolling: touch; border-bottom: 1px solid #dee2e6; }
+        .day-btn { padding: 10px 20px; border: 2px solid #007bff; background: transparent; color: #007bff; border-radius: 30px; cursor: pointer; font-weight: bold; white-space: nowrap; font-size: 14px; }
+        .day-btn.active { background: #007bff; color: white; }
+
+        .metrics { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+        .card { flex: 1; min-width: 200px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #28a745; }
+        .card.red { border-left-color: #dc3545; }
+        .card.purple { border-left-color: #6f42c1; }
+        .card.blue { border-left-color: #007bff; }
+        .card h3 { margin: 0 0 5px 0; color: #6c757d; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .card .value { font-size: 28px; font-weight: bold; color: #333; }
+        .search-container { position: relative; max-width: 350px; margin-top: 15px; margin-bottom: 5px;}
+        .search-container i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #888; }
+        .search-container input { width: 100%; padding: 12px 10px 12px 40px; border: 1px solid #ccc; border-radius: 20px; font-size: 14px; outline: none; }
+
+        .table-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 650px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; color: #495057; font-weight: bold; border-bottom: 2px solid #dee2e6; white-space: nowrap; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
+        .badge.active-status { background: #d4edda; color: #155724; }
+        .badge.suspended-status { background: #f8d7da; color: #721c24; }
+        .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; color: white; margin-right: 5px; margin-bottom: 5px; }
+        .btn-edit { background: #ffc107; color: #000; }
+        .btn-suspend { background: #fd7e14; }
+        .btn-activate { background: #28a745; }
+        .btn-delete { background: #dc3545; }
+        .btn-save { background: #17a2b8; }
+        .btn-primary { background: #007bff; padding: 12px 20px;}
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 150px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 13px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+        .day-header td { background-color: #e9ecef; font-weight: bold; color: #333; font-size: 16px; border-bottom: 2px solid #dee2e6; }
+
+        @media (max-width: 768px) {
+            .mobile-header { display: flex; }
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.open { left: 0; }
+            .sidebar-overlay.open { display: block; }
+            #login-screen { padding-left: 0; justify-content: center; }
+            .login-box { margin: 20px; }
+            .content-scroll { padding: 15px; }
+            .card .value { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modal-icon" class="modal-icon warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 id="modal-title">Notice</h3>
+            <p id="modal-message">Message goes here.</p>
+            <button id="modal-close-btn" class="modal-btn warning" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Mutia's Minimart</h2>
+            <p style="color:#666;">Admin Dashboard</p>
+            <label style="font-weight:bold; font-size:14px;">Username</label>
+            <input type="text" id="username" placeholder="admin">
+            <label style="font-weight:bold; font-size:14px;">Password / PIN</label>
+            <input type="password" id="pin" placeholder="••••">
+            <button onclick="attemptLogin()">Secure Log In</button>
+        </div>
+    </div>
+
+    <div id="admin-screen">
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <div class="sidebar" id="sidebar">
+            <h2>Mutia's Minimart</h2>
+            <div class="nav-item active" onclick="switchTab('dashboard')" id="nav-dashboard"><i class="fa-solid fa-chart-pie"></i> Daily P&L</div>
+            <div class="nav-item" onclick="switchTab('mpesa')" id="nav-mpesa"><i class="fa-solid fa-mobile-screen"></i> M-Pesa Transactions</div>
+            <div class="nav-item" onclick="switchTab('expenses')" id="nav-expenses"><i class="fa-solid fa-receipt"></i> Expenses</div>
+            <div class="nav-item" onclick="switchTab('inventory')" id="nav-inventory"><i class="fa-solid fa-boxes-stacked"></i> Price Management</div>
+            <div class="nav-item" onclick="switchTab('alerts')" id="nav-alerts"><i class="fa-solid fa-bell"></i> Stock Alerts <span class="badge" style="background:#dc3545; color:white; font-size:10px; padding:2px 8px; border-radius:20px;" id="alert-count">0</span></div>
+            <div class="nav-item" onclick="switchTab('users')" id="nav-users"><i class="fa-solid fa-users"></i> Cashier Users</div>
+            <div style="flex-grow: 1;"></div>
+            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+        </div>
+
+        <div class="main-content">
+            <div class="mobile-header">
+                <h2 style="margin:0; font-size:20px;">Admin Dashboard</h2>
+                <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            </div>
+            <div class="content-scroll">
+
+                <div id="section-dashboard" class="section active">
+                    <div class="section-header">
+                        <h2>Sales & Profit Analysis</h2>
+                        <p style="color:#888; font-size:14px;">Select a day to view financial breakdown.</p>
+                    </div>
+                    <div class="day-tabs" id="day-tabs-container"></div>
+                    <div class="metrics">
+                        <div class="card blue"><h3>Gross Sales</h3><div class="value">KES <span id="metric-revenue">0.00</span></div><div class="subtitle" id="metric-orders-count">0 Orders</div></div>
+                        <div class="card red"><h3>Total Expenditure</h3><div class="value">KES <span id="metric-expenses">0.00</span></div></div>
+                        <div class="card purple"><h3>Net Profit</h3><div class="value">KES <span id="metric-profit">0.00</span></div></div>
+                    </div>
+                    <div class="table-container">
+                        <h3 style="margin-top:0;">Itemized Sales for <span id="table-date-title">Today</span></h3>
+                        <table><thead><tr><th>Order ID & Time</th><th>Items Sold</th><th>Est. Buying Cost</th><th>Revenue</th><th>Est. Profit</th></tr></thead><tbody id="orders-tbody"></tbody></table>
+                    </div>
+                </div>
+
+                <div id="section-mpesa" class="section">
+                    <div class="section-header"><h2>M-Pesa Transactions (Today)</h2></div>
+                    <div class="metrics">
+                        <div class="card blue"><h3>M-Pesa Revenue</h3><div class="value">KES <span id="mpesa-total">0.00</span></div></div>
+                        <div class="card purple"><h3>Transaction Count</h3><div class="value" id="mpesa-count">0</div></div>
+                    </div>
+                    <div class="table-container">
+                        <table><thead><tr><th>Time</th><th>Receipt ID</th><th>Phone</th><th>Amount (KES)</th></tr></thead><tbody id="mpesa-tbody"></tbody></table>
+                    </div>
+                </div>
+
+                <div id="section-expenses" class="section">
+                    <div class="section-header"><h2>Business Expenses</h2></div>
+                    <div class="table-container" style="background:#fff3cd; border:1px solid #ffeeba;">
+                        <h3 style="margin-top:0;">Record New Expenditure</h3>
+                        <div class="form-row">
+                            <div class="form-group" style="flex:2;"><label>Description</label><input type="text" id="new-expense-desc" placeholder="e.g. Bought stock"></div>
+                            <div class="form-group"><label>Amount (KES)</label><input type="number" id="new-expense-amount" placeholder="0.00"></div>
+                            <button class="btn btn-primary" style="height:42px; margin-bottom:2px; background:#d39e00; border:none; color:black;" onclick="addExpense()">Record</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table><thead><tr><th>Time</th><th>Description</th><th>Amount</th><th>Logged By</th></tr></thead><tbody id="expenses-tbody"></tbody></table>
+                    </div>
+                </div>
+
+                <div id="section-inventory" class="section">
+                    <div class="section-header">
+                        <h2>Price Management</h2>
+                        <div class="search-container"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="inventory-search-input" placeholder="Search product..." oninput="handleInventorySearch()"></div>
+                    </div>
+                    <div class="table-container">
+                        <table><thead><tr><th>Item</th><th>Category</th><th>Stock</th><th>Buying Price</th><th>Selling Price</th><th>Actions</th></tr></thead><tbody id="inventory-tbody"></tbody></table>
+                    </div>
+                </div>
+
+                <div id="section-alerts" class="section">
+                    <div class="section-header"><h2>Restock Audit Logs</h2></div>
+                    <div class="table-container">
+                        <table><thead><tr><th>Date & Time</th><th>Item</th><th>Qty Added</th><th>Added By</th><th>Action</th></tr></thead><tbody id="alerts-tbody"></tbody></table>
+                    </div>
+                </div>
+
+                <div id="section-users" class="section">
+                    <div class="section-header"><h2>Cashier & Admin Users</h2></div>
+                    <div class="table-container" style="background:#f8f9fa; border:1px solid #dee2e6;">
+                        <h3 style="margin-top:0;">Create Account</h3>
+                        <div class="form-row">
+                            <div class="form-group"><label>Username</label><input type="text" id="new-user-name" placeholder="e.g. faith"></div>
+                            <div class="form-group"><label>Role</label><select id="new-user-role"><option value="cashier">Cashier</option><option value="admin">Admin</option></select></div>
+                            <div class="form-group"><label>Password</label><input type="password" id="new-user-pin" placeholder="****"></div>
+                            <button class="btn btn-primary" style="height:42px; margin-bottom:2px;" onclick="addUser()">Create</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table><thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="users-tbody"></tbody></table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://169.58.58.133:4004";
+
+        let allProductsMap = {};
+        let allProductsArray = [];
+        let inventorySearchQuery = '';
+        let masterOrdersData = {};
+        let masterExpensesData = {};
+        let availableDays = [];
+
+        function showModal(title, message, type = 'warning') {
+            const modal = document.getElementById('custom-modal');
+            const icon = document.getElementById('modal-icon');
+            const btn = document.getElementById('modal-close-btn');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            icon.className = `modal-icon ${type}`;
+            btn.className = `modal-btn ${type}`;
+            if(type === 'success') icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            else if(type === 'error') icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+            else icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            modal.style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('custom-modal').style.display = 'none'; }
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('open');
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if(localStorage.getItem('admin_logged_in') === 'true') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-screen').style.display = 'flex';
+                loadAllData();
+            }
+        });
+
+        async function attemptLogin() {
+            const username = document.getElementById('username').value;
+            const pin = document.getElementById('pin').value;
+            try {
+                const response = await fetch(`${API_URL}/api/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, pin, attemptedRole: 'admin' })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    localStorage.setItem('admin_logged_in', 'true');
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('admin-screen').style.display = 'flex';
+                    loadAllData();
+                } else showModal("Login Failed", data.message, "error");
+            } catch (error) { showModal("Connection Error", "Could not connect to server.", "error"); }
+        }
+
+        function logout() { localStorage.removeItem('admin_logged_in'); location.reload(); }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            document.getElementById(`section-${tabName}`).classList.add('active');
+            document.getElementById(`nav-${tabName}`).classList.add('active');
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('open');
+            if(tabName === 'mpesa') fetchMpesaTransactions();
+        }
+
+        async function loadAllData() {
+            await fetchInventory();
+            await fetchExpenses();
+            await fetchOrdersAndCalculate();
+            fetchUsers();
+            fetchAlerts();
+        }
+
+        async function fetchExpenses() {
+            try {
+                const response = await fetch(`${API_URL}/api/expenditures`);
+                const data = await response.json();
+                if (data.success) {
+                    const tbody = document.getElementById('expenses-tbody');
+                    tbody.innerHTML = '';
+                    masterExpensesData = {};
+                    const grouped = {};
+                    data.expenses.forEach(exp => {
+                        const dateObj = new Date(exp.date);
+                        const dayString = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+                        if(!masterExpensesData[dayString]) masterExpensesData[dayString] = [];
+                        masterExpensesData[dayString].push(exp);
+                        if(!grouped[dayString]) grouped[dayString] = { total: 0, items: [], rawDate: dateObj };
+                        grouped[dayString].items.push(exp);
+                        grouped[dayString].total += exp.amount;
+                    });
+                    const top7Days = Object.keys(grouped).sort((a, b) => grouped[b].rawDate - grouped[a].rawDate).slice(0, 7);
+                    if (top7Days.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No expenses recorded.</td></tr>'; return; }
+                    top7Days.forEach(day => {
+                        const dayData = grouped[day];
+                        const headerTr = document.createElement('tr'); headerTr.className = 'day-header';
+                        headerTr.innerHTML = `<td colspan="2"><i class="fa-regular fa-calendar-days"></i> ${day}</td><td colspan="2" style="text-align:right;">Day Total: KES ${dayData.total.toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>`;
+                        tbody.appendChild(headerTr);
+                        dayData.items.forEach(exp => {
+                            const timeStr = new Date(exp.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${timeStr}</td><td><strong>${exp.description}</strong></td><td style="color:#dc3545; font-weight:bold;">KES ${exp.amount.toFixed(2)}</td><td style="text-transform:uppercase;">${exp.added_by || 'Admin'}</td>`;
+                            tbody.appendChild(tr);
+                        });
+                    });
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function addExpense() {
+            const desc = document.getElementById('new-expense-desc').value;
+            const amount = document.getElementById('new-expense-amount').value;
+            if(!desc || !amount) return showModal("Missing Info", "Please provide description and amount.", "warning");
+            try {
+                const response = await fetch(`${API_URL}/api/expenditures`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description: desc, amount, added_by: 'Admin' })
+                });
+                if((await response.json()).success) {
+                    document.getElementById('new-expense-desc').value = ''; document.getElementById('new-expense-amount').value = '';
+                    loadAllData();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function fetchOrdersAndCalculate() {
+            try {
+                const response = await fetch(`${API_URL}/api/orders`);
+                const data = await response.json();
+                if (data.success) {
+                    masterOrdersData = {}; availableDays = [];
+                    data.orders.forEach(order => {
+                        const dateObj = new Date(order.createdAt);
+                        const dayString = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+                        if(!masterOrdersData[dayString]) { masterOrdersData[dayString] = []; availableDays.push(dayString); }
+                        masterOrdersData[dayString].push(order);
+                    });
+                    const tabsContainer = document.getElementById('day-tabs-container');
+                    tabsContainer.innerHTML = '';
+                    if(availableDays.length === 0) { tabsContainer.innerHTML = '<p>No data available.</p>'; return; }
+                    availableDays.forEach((day, index) => {
+                        const btn = document.createElement('button'); btn.className = `day-btn ${index === 0 ? 'active' : ''}`;
+                        btn.innerText = day; btn.onclick = () => selectDay(day, btn); tabsContainer.appendChild(btn);
+                    });
+                    selectDay(availableDays[0], tabsContainer.firstChild);
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        function selectDay(dayString, clickedBtn) {
+            document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+            if(clickedBtn) clickedBtn.classList.add('active');
+            document.getElementById('table-date-title').innerText = dayString;
+            let dailyRevenue = 0, dailyCOGS = 0, dailyExpenses = 0;
+            const expensesForDay = masterExpensesData[dayString] || [];
+            expensesForDay.forEach(exp => dailyExpenses += exp.amount);
+            const ordersForDay = masterOrdersData[dayString] || [];
+            const tbody = document.getElementById('orders-tbody'); tbody.innerHTML = '';
+            if (ordersForDay.length === 0) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No orders.</td></tr>';
+            else {
+                ordersForDay.forEach(order => {
+                    dailyRevenue += order.total_amount;
+                    let orderBuyCost = 0, orderItemsHtml = [];
+                    order.items.forEach(item => {
+                        const product = allProductsMap[item.product_id];
+                        const buyPrice = product ? (product.buying_price || 0) : 0;
+                        orderBuyCost += buyPrice * item.quantity;
+                        orderItemsHtml.push(`${item.quantity}x ${item.name}`);
+                    });
+                    dailyCOGS += orderBuyCost;
+                    const orderProfit = order.total_amount - orderBuyCost;
+                    const timeStr = new Date(order.createdAt).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td><strong>#${order._id.substring(0,6).toUpperCase()}</strong><br><small style="color:#adb5bd;">${timeStr}</small></td><td style="color:#555; white-space:normal; min-width:150px; font-size:13px;">${orderItemsHtml.join('<br>')}</td><td style="color:#dc3545;">KES ${orderBuyCost.toFixed(2)}</td><td style="color:#28a745; font-weight:bold;">KES ${order.total_amount.toFixed(2)}</td><td style="color:#6f42c1; font-weight:bold;">KES ${orderProfit.toFixed(2)}</td>`;
+                    tbody.appendChild(tr);
+                });
+            }
+            const dailyNetProfit = dailyRevenue - (dailyCOGS + dailyExpenses);
+            document.getElementById('metric-revenue').innerText = dailyRevenue.toLocaleString('en-KE', { minimumFractionDigits: 2 });
+            document.getElementById('metric-orders-count').innerText = `${ordersForDay.length} Orders`;
+            document.getElementById('metric-expenses').innerText = dailyExpenses.toLocaleString('en-KE', { minimumFractionDigits: 2 });
+            document.getElementById('metric-profit').innerText = dailyNetProfit.toLocaleString('en-KE', { minimumFractionDigits: 2 });
+        }
+
+        async function fetchMpesaTransactions() {
+            try {
+                const res = await fetch(`${API_URL}/api/transactions/today`);
+                const data = await res.json();
+                const tbody = document.getElementById('mpesa-tbody');
+                tbody.innerHTML = '';
+                if(data.success) {
+                    document.getElementById('mpesa-total').innerText = data.total.toLocaleString('en-KE', {minimumFractionDigits:2});
+                    document.getElementById('mpesa-count').innerText = data.count;
+                    if(data.transactions.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No M-Pesa transactions today.</td></tr>';
+                    } else {
+                        data.transactions.forEach(tx => {
+                            const timeStr = new Date(tx.createdAt).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${timeStr}</td><td style="font-family:monospace; font-weight:600;">${tx.receipt}</td><td>${tx.phone || 'N/A'}</td><td style="color:#28a745; font-weight:bold;">KES ${tx.amount.toFixed(2)}</td>`;
+                            tbody.appendChild(tr);
+                        });
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function handleInventorySearch() {
+            inventorySearchQuery = document.getElementById('inventory-search-input').value.toLowerCase();
+            renderInventoryTable();
+        }
+
+        async function fetchInventory() {
+            try {
+                const response = await fetch(`${API_URL}/api/products`);
+                const data = await response.json();
+                if (data.success) {
+                    allProductsMap = {}; allProductsArray = data.products;
+                    data.products.forEach(product => { allProductsMap[product._id] = product; });
+                    renderInventoryTable();
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        function renderInventoryTable() {
+            const tbody = document.getElementById('inventory-tbody');
+            tbody.innerHTML = '';
+            const filtered = allProductsArray.filter(p => p.name.toLowerCase().includes(inventorySearchQuery));
+            if(filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#888;">No products found.</td></tr>'; return; }
+            filtered.forEach(product => {
+                const stockLvl = product.stock || 0;
+                const stockColor = stockLvl < 10 ? 'color:#dc3545;' : 'color:#28a745;';
+                const safeName = product.name.replace(/'/g, "\\'");
+                const buyPrice = product.buying_price || 0;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td><strong>${product.name}</strong></td><td style="text-transform:capitalize;">${product.type}</td><td style="font-weight:bold; font-size:18px; ${stockColor}">${stockLvl}</td><td><input type="number" id="buy-${product._id}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;" value="${buyPrice}"></td><td><input type="number" id="sell-${product._id}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;" value="${product.price}"></td><td style="white-space:nowrap;"><button class="btn btn-save" onclick="updateProduct('${product._id}')"><i class="fa-solid fa-floppy-disk"></i></button><button class="btn btn-delete" onclick="deleteProduct('${product._id}', '${safeName}')"><i class="fa-solid fa-trash"></i></button></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function updateProduct(id) {
+            const buyPrice = document.getElementById(`buy-${id}`).value;
+            const sellPrice = document.getElementById(`sell-${id}`).value;
+            try {
+                const res = await fetch(`${API_URL}/api/products/${id}`, {
+                    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ price: sellPrice, buying_price: buyPrice, cashierName: 'Admin' })
+                });
+                if((await res.json()).success) { showModal("Success", "Prices updated!", "success"); loadAllData(); }
+            } catch(e) { console.error(e); }
+        }
+
+        async function deleteProduct(id, name) {
+            if(!confirm(`Delete "${name}"?`)) return;
+            try { const res = await fetch(`${API_URL}/api/products/${id}`, { method: 'DELETE' }); if((await res.json()).success) loadAllData(); }
+            catch(e) { console.error(e); }
+        }
+
+        async function fetchAlerts() {
+            try {
+                const response = await fetch(`${API_URL}/api/stock-logs`);
+                const data = await response.json();
+                if (data.success) {
+                    const tbody = document.getElementById('alerts-tbody');
+                    tbody.innerHTML = '';
+                    document.getElementById('alert-count').innerText = data.logs.length;
+                    data.logs.reverse().forEach(log => {
+                        const timeStr = new Date(log.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${timeStr}</td><td><strong>${log.item_name}</strong></td><td style="color:#28a745; font-weight:bold;">+${log.qty_added}</td><td style="text-transform:uppercase;">${log.cashier_name}</td><td><button class="btn btn-delete" onclick="deleteStockAlert('${log._id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function deleteStockAlert(id) {
+            if(!confirm("Clear this alert?")) return;
+            try { const res = await fetch(`${API_URL}/api/stock-logs/${id}`, { method: 'DELETE' }); if((await res.json()).success) fetchAlerts(); }
+            catch(e) { console.error(e); }
+        }
+
+        async function fetchUsers() {
+            try {
+                const res = await fetch(`${API_URL}/api/staff`);
+                const data = await res.json();
+                if(data.success) {
+                    const tbody = document.getElementById('users-tbody'); tbody.innerHTML = '';
+                    data.staff.forEach(user => {
+                        const isActive = user.isActive !== false;
+                        const statusBadge = isActive ? '<span class="badge active-status">Active</span>' : '<span class="badge suspended-status">Suspended</span>';
+                        const toggleBtn = isActive ? `<button class="btn btn-suspend" onclick="toggleUserStatus('${user._id}', false)"><i class="fa-solid fa-ban"></i></button>` : `<button class="btn btn-activate" onclick="toggleUserStatus('${user._id}', true)"><i class="fa-solid fa-check"></i></button>`;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td><strong>${user.username}</strong></td><td style="text-transform:uppercase; color:#666; font-size:12px;">${user.role}</td><td>${statusBadge}</td><td style="white-space:nowrap;"><button class="btn btn-edit" onclick="editUsername('${user._id}', '${user.username}')"><i class="fa-solid fa-pen"></i></button>${toggleBtn}<button class="btn btn-edit" onclick="changePassword('${user._id}', '${user.username}')"><i class="fa-solid fa-key"></i></button><button class="btn btn-delete" onclick="deleteUser('${user._id}', '${user.username}')"><i class="fa-solid fa-trash"></i></button></td>`;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function addUser() {
+            const name = document.getElementById('new-user-name').value;
+            const role = document.getElementById('new-user-role').value;
+            const pin = document.getElementById('new-user-pin').value;
+            if(!name || !pin) return showModal("Missing Info", "Please fill in all fields.", "warning");
+            try {
+                const response = await fetch(`${API_URL}/api/staff`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: name, role, pin })
+                });
+                const data = await response.json();
+                if(data.success) { document.getElementById('new-user-name').value=''; document.getElementById('new-user-pin').value=''; fetchUsers(); showModal("Success", "User added!", "success"); }
+                else showModal("Error", data.message, "error");
+            } catch(e) { console.error(e); }
+        }
+
+        async function editUsername(id, oldName) {
+            const newName = prompt(`New username for ${oldName}:`, oldName);
+            if(!newName || newName === oldName) return;
+            try { const res = await fetch(`${API_URL}/api/staff/${id}/edit`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username:newName}) }); if((await res.json()).success) fetchUsers(); }
+            catch(e){}
+        }
+
+        async function toggleUserStatus(id, makeActive) {
+            if(!confirm(`Are you sure?`)) return;
+            try { const res = await fetch(`${API_URL}/api/staff/${id}/edit`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({isActive:makeActive}) }); if((await res.json()).success) fetchUsers(); }
+            catch(e){}
+        }
+
+        async function changePassword(id, username) {
+            const newPassword = prompt(`New password for ${username}:`);
+            if(!newPassword) return;
+            try { const res = await fetch(`${API_URL}/api/staff/${id}/password`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({newPin:newPassword}) }); if((await res.json()).success) alert('Password updated!'); }
+            catch(e){}
+        }
+
+        async function deleteUser(id, username) {
+            if(!confirm(`Delete ${username}?`)) return;
+            try { const res = await fetch(`${API_URL}/api/staff/${id}`, { method: 'DELETE' }); if((await res.json()).success) fetchUsers(); }
+            catch(e){}
+        }
+    </script>
+</body>
+</html>
