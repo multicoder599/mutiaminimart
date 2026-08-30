@@ -39,7 +39,7 @@ connectDB();
 // 2. CENTRAL API & CASHIER SERVER (PORT 4004)
 // ==========================================
 const API_PORT = 4004;
-const STORE_ID = 'MUTIA';
+const STORE_ID = 'STALLION';
 const MEGAPAY_API_KEY = process.env.MEGAPAY_API_KEY;
 const MEGAPAY_EMAIL = process.env.MEGAPAY_EMAIL;
 
@@ -257,7 +257,7 @@ apiApp.get('/api/orders', async (req, res) => {
 
 apiApp.post('/api/orders', async (req, res) => {
     try {
-        const { items, total_amount, served_by, customer_name, payment_method, mpesa_receipt } = req.body;
+        const { items, total_amount, served_by, customer_name, payment_method, mpesa_receipt, cash_tendered, cash_change } = req.body;
         const adminUser = await User.findOne({ username: 'admin' });
         const newOrder = await Order.create({
             user_id: adminUser ? adminUser._id : null,
@@ -268,7 +268,9 @@ apiApp.post('/api/orders', async (req, res) => {
             served_by: served_by || 'Cashier',
             customer_name: customer_name || 'WALK-IN',
             payment_method: payment_method || 'cash',
-            mpesa_receipt: mpesa_receipt || null
+            mpesa_receipt: mpesa_receipt || null,
+            cash_tendered: cash_tendered || null,
+            cash_change: cash_change || null
         });
         if (items && items.length > 0) {
             for (let item of items) {
@@ -283,22 +285,21 @@ apiApp.post('/api/orders', async (req, res) => {
     }
 });
 
-apiApp.patch('/api/orders/:id/status', async (req, res) => {
+// ------------------------------------------
+// DAILY SALES ENDPOINT
+// ------------------------------------------
+apiApp.get('/api/sales/today', async (req, res) => {
+    const start = new Date(); start.setHours(0,0,0,0);
+    const end = new Date(); end.setHours(23,59,59,999);
     try {
-        const { status } = req.body;
-        const updatedOrder = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
-        res.json({ success: true, order: updatedOrder });
+        const orders = await Order.find({ createdAt: { $gte: start, $lte: end }, status: 'completed' });
+        const totalSales = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+        const cashSales = orders.filter(o => o.payment_method === 'cash').reduce((sum, o) => sum + (o.total_amount || 0), 0);
+        const mpesaSales = orders.filter(o => o.payment_method === 'mpesa').reduce((sum, o) => sum + (o.total_amount || 0), 0);
+        const orderCount = orders.length;
+        res.json({ success: true, totalSales, cashSales, mpesaSales, orderCount, orders });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Update failed' });
-    }
-});
-
-apiApp.get('/api/orders/wipe-test-data', async (req, res) => {
-    try {
-        await Order.deleteMany({});
-        res.json({ success: true, message: 'All test orders deleted permanently!' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: `DB Error: ${error.message}` });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -317,14 +318,14 @@ apiApp.post('/api/initiate-payment', async (req, res) => {
     if (formattedPhone.startsWith('0')) formattedPhone = '254' + formattedPhone.substring(1);
     else if (formattedPhone.startsWith('+')) formattedPhone = formattedPhone.substring(1);
 
-    const reference = `MUTIA-${Date.now()}`;
+    const reference = `STALLION-${Date.now()}`;
     const payload = {
         api_key: MEGAPAY_API_KEY,
         email: MEGAPAY_EMAIL,
         amount: amount,
         msisdn: formattedPhone,
         callback_url: `http://169.58.58.133:${API_PORT}/api/megapay/webhook`,
-        description: `Mutia's Minimart Checkout`,
+        description: `Stallion Minimart Checkout`,
         reference: reference
     };
 
@@ -378,10 +379,10 @@ apiApp.get('/api/stream-payment/:refId', (req, res) => {
 apiApp.post('/api/megapay/webhook', async (req, res) => {
     res.status(200).send("OK");
     const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
-    console.log(`[${STORE_ID}] 📥 WEBHOOK HIT from ${ip}`);
+    console.log(`[${STORE_ID}] WEBHOOK HIT from ${ip}`);
 
     if (!req.body || Object.keys(req.body).length === 0) {
-        console.error(`[${STORE_ID}] ⚠️ EMPTY BODY received.`);
+        console.error(`[${STORE_ID}] EMPTY BODY received.`);
         return;
     }
 
@@ -435,10 +436,10 @@ apiApp.post('/api/megapay/webhook', async (req, res) => {
             await MpesaTransaction.create({ store_id: STORE_ID, ref_id: matchedRefId, receipt, phone: matchedTx.phone, amount: matchedTx.amount, status: 'Paid' });
             connectedClients.forEach(c => { if (c.refId === matchedRefId) c.res.write(`data: ${JSON.stringify({ success: true, receipt })}\n\n`); });
         } else {
-            console.log(`[${STORE_ID}] ⚠️ No pending match for receipt ${receipt}.`);
+            console.log(`[${STORE_ID}] No pending match for receipt ${receipt}.`);
         }
     } catch (err) {
-        console.error(`[${STORE_ID}] 💥 Webhook processing error:`, err.message);
+        console.error(`[${STORE_ID}] Webhook processing error:`, err.message);
     }
 });
 
@@ -481,12 +482,9 @@ setInterval(() => {
 // SERVE CASHIER FRONTEND
 // ------------------------------------------
 apiApp.use(express.static(path.join(__dirname, 'public/cashier')));
-apiApp.get('/cashier*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/cashier/index.html'));
-});
 
 apiApp.listen(API_PORT, '0.0.0.0', () => {
-    console.log(`🟢 Mutia's Minimart API & Cashier running on http://169.58.58.133:${API_PORT}`);
+    console.log(`Stallion Minimart API & Cashier running on http://169.58.58.133:${API_PORT}`);
 });
 
 // ==========================================
@@ -499,5 +497,5 @@ adminApp.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public/admin/index.html'));
 });
 adminApp.listen(4005, '0.0.0.0', () => {
-    console.log(`🔵 Mutia's Minimart Admin Portal running on http://169.58.58.133:4005`);
+    console.log(`Stallion Minimart Admin Portal running on http://169.58.58.133:4005`);
 });
