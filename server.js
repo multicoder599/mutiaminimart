@@ -172,15 +172,28 @@ apiApp.get('/api/products', async (req, res) => {
     }
 });
 
+// Lookup product by barcode
+apiApp.get('/api/products/barcode/:code', async (req, res) => {
+    try {
+        const product = await Product.findOne({ barcode: req.params.code });
+        if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+        res.json({ success: true, product });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 apiApp.post('/api/products', async (req, res) => {
     try {
-        const { name, type, price, buying_price, stock } = req.body;
+        const { name, type, price, buying_price, stock, barcode, image } = req.body;
         const newProduct = await Product.create({
             name,
-            type: type.toLowerCase(),
-            price: Number(price),
+            barcode: barcode || null,
+            type: (type || 'others').toLowerCase(),
+            price: Number(price) || 0,
             buying_price: Number(buying_price) || 0,
-            stock: Number(stock) || 0
+            stock: Number(stock) || 0,
+            image: image || null
         });
         res.json({ success: true, message: 'Product created!', product: newProduct });
     } catch (error) {
@@ -191,11 +204,14 @@ apiApp.post('/api/products', async (req, res) => {
 
 apiApp.patch('/api/products/:id', async (req, res) => {
     try {
-        const { price, buying_price, addedStock, cashierName } = req.body;
+        const { price, buying_price, addedStock, cashierName, barcode, image, name } = req.body;
         const product = await Product.findById(req.params.id);
         if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
         if (price !== undefined && price !== '') product.price = Number(price);
         if (buying_price !== undefined && buying_price !== '') product.buying_price = Number(buying_price);
+        if (barcode !== undefined) product.barcode = barcode;
+        if (image !== undefined) product.image = image;
+        if (name !== undefined) product.name = name;
         if (addedStock && Number(addedStock) > 0) {
             product.stock = (product.stock || 0) + Number(addedStock);
             await StockLog.create({ item_name: product.name, qty_added: Number(addedStock), cashier_name: cashierName || "Unknown" });
