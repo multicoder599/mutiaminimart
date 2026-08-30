@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mutia's Minimart — Admin</title>
+    <title>Stallion Minimart — Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,23 +39,20 @@
             min-height: 100vh;
         }
 
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
         @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px var(--primary-glow); }
-            50% { box-shadow: 0 0 40px var(--primary-glow); }
-        }
+        @keyframes countUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px var(--primary-glow); } 50% { box-shadow: 0 0 40px var(--primary-glow); } }
+        @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+        @keyframes scan-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
         /* Modal */
         .modal-overlay {
@@ -83,6 +80,19 @@
         .modal-btn.error { background: var(--danger); color: white; }
         .modal-btn.warning { background: var(--warning); color: #000; }
 
+        /* Toast */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 5000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast {
+            background: var(--bg-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+            padding: 14px 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 12px;
+            animation: toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            font-weight: 600; font-size: 14px; max-width: 360px; pointer-events: all;
+        }
+        .toast.hiding { animation: toastOut 0.3s ease forwards; }
+        .toast-success { border-left: 3px solid var(--primary); }
+        .toast-error { border-left: 3px solid var(--danger); }
+        .toast-warning { border-left: 3px solid var(--warning); }
+
         /* Login */
         #login-screen {
             display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center;
@@ -102,7 +112,7 @@
         .login-logo {
             width: 64px; height: 64px; background: linear-gradient(135deg, var(--accent), #2563eb);
             border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 24px; box-shadow: 0 8px 32px var(--accent-glow);
+            margin: 0 auto 24px; box-shadow: 0 8px 32px var(--accent-glow); animation: float 3s ease infinite;
         }
         .login-box h2 { font-size: 26px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.5px; }
         .login-box .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
@@ -177,12 +187,10 @@
         .section { display: none; animation: fadeIn 0.3s ease; }
         .section.active { display: block; }
 
-        /* Page Header */
         .page-header { margin-bottom: 24px; }
         .page-header h2 { font-size: 24px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.5px; }
         .page-header p { color: var(--text-dim); font-size: 14px; }
 
-        /* Day Tabs */
         .day-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 20px; }
         .day-btn {
             padding: 10px 20px; background: var(--glass); border: 1px solid var(--glass-border);
@@ -192,7 +200,6 @@
         .day-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
         .day-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 16px var(--accent-glow); }
 
-        /* Metrics */
         .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .metric-card {
             background: var(--bg-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius);
@@ -215,7 +222,6 @@
         .metric-card.green .value { color: var(--primary); }
         .metric-card .subtitle { font-size: 13px; color: var(--text-dim); margin-top: 4px; font-weight: 500; }
 
-        /* Tables */
         .table-card {
             background: var(--bg-elevated); border: 1px solid var(--glass-border);
             border-radius: var(--radius); padding: 24px; margin-bottom: 24px; overflow-x: auto;
@@ -245,7 +251,6 @@
         .badge-cash { background: rgba(59,130,246,0.15); color: var(--accent); }
         .badge-mpesa { background: rgba(139,92,246,0.15); color: var(--purple); }
 
-        /* Buttons */
         .btn {
             padding: 8px 14px; border: none; border-radius: var(--radius-sm); cursor: pointer;
             font-weight: 700; font-size: 12px; transition: var(--transition); display: inline-flex;
@@ -264,7 +269,6 @@
         .btn-ghost { background: var(--glass); color: var(--text-muted); border: 1px solid var(--glass-border); }
         .btn-ghost:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 
-        /* Forms */
         .form-card {
             background: var(--bg-elevated); border: 1px solid var(--glass-border);
             border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
@@ -295,12 +299,13 @@
         }
         .inv-input:focus { border-color: var(--accent); }
 
-        /* Scan Bar */
         .scan-bar {
             background: var(--bg-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius);
             padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: relative; overflow: hidden;
+            transition: var(--transition);
         }
+        .scan-bar.scanning { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
         .scan-bar::before {
             content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
             background: linear-gradient(to bottom, var(--accent), #2563eb);
@@ -319,6 +324,9 @@
             background: var(--glass); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--glass-border);
         }
 
+        .product-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--bg); }
+        .product-thumb-avatar { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: white; }
+
         @media (max-width: 768px) {
             .mobile-header { display: flex; }
             .sidebar { position: fixed; left: -270px; height: 100vh; transition: 0.3s ease; }
@@ -327,11 +335,15 @@
             .content-scroll { padding: 16px; }
             .form-row { flex-direction: column; align-items: stretch; }
             .metric-card .value { font-size: 24px; }
+            .toast-container { top: auto; bottom: 16px; right: 16px; left: 16px; }
+            .toast { max-width: 100%; }
         }
     </style>
 <base target="_blank">
 </head>
 <body>
+
+    <div class="toast-container" id="toast-container"></div>
 
     <div id="custom-modal" class="modal-overlay">
         <div class="modal-box">
@@ -349,7 +361,7 @@
             <div class="login-logo">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
             </div>
-            <h2>Mutia's Minimart</h2>
+            <h2>Stallion Minimart</h2>
             <p class="subtitle">Admin Dashboard</p>
             <div class="input-group">
                 <label>Username</label>
@@ -371,7 +383,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                 </div>
                 <div class="brand-text">
-                    <h3>Mutia's Minimart</h3>
+                    <h3>Stallion Minimart</h3>
                     <span>Admin Portal</span>
                 </div>
             </div>
@@ -514,21 +526,21 @@
                         <h2>Price Management</h2>
                         <p>Set buying price, selling price, and stock levels. Use barcode scanner to find products instantly.</p>
                     </div>
-                    <div class="scan-bar">
+                    <div class="scan-bar" id="scan-bar">
                         <div class="scan-icon">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><line x1="8" y1="12" x2="16" y2="12" stroke-width="3"></line></svg>
                         </div>
                         <input type="text" id="barcode-search" placeholder="Scan barcode to find product..." autocomplete="off">
-                        <span class="scan-hint">Scanner ready</span>
+                        <span class="scan-hint" id="scan-hint">Scanner ready</span>
                     </div>
                     <div class="search-box">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" id="inventory-search-input" placeholder="Search product by name..." oninput="handleInventorySearch()">
+                        <input type="text" id="inventory-search-input" placeholder="Search product by name or barcode..." oninput="handleInventorySearch()">
                     </div>
                     <div class="table-card">
                         <div style="overflow-x: auto;">
                             <table class="data-table">
-                                <thead><tr><th>Item</th><th>Barcode</th><th>Category</th><th>Stock</th><th>Buying Price</th><th>Selling Price</th><th>Actions</th></tr></thead>
+                                <thead><tr><th style="width: 50px;"></th><th>Item</th><th>Barcode</th><th>Category</th><th>Stock</th><th>Buying Price</th><th>Selling Price</th><th>Actions</th></tr></thead>
                                 <tbody id="inventory-tbody"></tbody>
                             </table>
                         </div>
@@ -598,11 +610,14 @@
         let barcodeBuffer = '';
         let barcodeTimer = null;
 
-        const icons = {
-            warning: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
-            success: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
-            error: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
-        };
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('hiding'); setTimeout(() => toast.remove(), 300); }, 4000);
+        }
 
         function showModal(title, message, type = 'warning') {
             const modal = document.getElementById('custom-modal');
@@ -612,7 +627,6 @@
             document.getElementById('modal-message').innerText = message;
             iconDiv.className = `modal-icon ${type}`;
             btn.className = `modal-btn ${type}`;
-            iconDiv.innerHTML = icons[type] || icons.warning;
             modal.style.display = 'flex';
         }
         function closeModal() { document.getElementById('custom-modal').style.display = 'none'; }
@@ -624,13 +638,14 @@
         // Barcode Scanner for Admin Inventory
         function setupBarcodeScanner() {
             const barcodeInput = document.getElementById('barcode-search');
+            const scanBar = document.getElementById('scan-bar');
 
             document.addEventListener('keydown', (e) => {
                 const active = document.activeElement;
                 const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
 
                 if (e.key === 'Enter') {
-                    if (barcodeBuffer.length >= 4 && !isTyping) {
+                    if (barcodeBuffer.length >= 3 && !isTyping) {
                         e.preventDefault();
                         handleBarcodeScan(barcodeBuffer);
                         barcodeBuffer = '';
@@ -641,7 +656,7 @@
                 if (!isTyping && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
                     barcodeBuffer += e.key;
                     clearTimeout(barcodeTimer);
-                    barcodeTimer = setTimeout(() => { barcodeBuffer = ''; }, 100);
+                    barcodeTimer = setTimeout(() => { barcodeBuffer = ''; }, 120);
                 }
             });
 
@@ -655,6 +670,8 @@
                         }
                     }
                 });
+                barcodeInput.addEventListener('focus', () => scanBar.classList.add('scanning'));
+                barcodeInput.addEventListener('blur', () => scanBar.classList.remove('scanning'));
             }
         }
 
@@ -664,10 +681,9 @@
             if (searchInput) searchInput.value = code;
             renderInventoryTable();
 
-            // Highlight the row if found
             const product = allProductsArray.find(p => p.barcode === code);
             if (product) {
-                showModal("Product Found", `${product.name} — Set BP, SP and Stock below.`, "success");
+                showToast(`${product.name} found — Set BP, SP and Stock below.`, 'success');
                 setTimeout(() => {
                     const row = document.querySelector(`[data-product-id="${product._id}"]`);
                     if (row) {
@@ -677,8 +693,15 @@
                     }
                 }, 300);
             } else {
-                showModal("Not Found", `No product with barcode: ${code}. Add it in the cashier portal first.`, "warning");
+                showToast(`No product with barcode: ${code}`, 'warning');
             }
+        }
+
+        function getProductColor(name) {
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            return colors[Math.abs(hash) % colors.length];
         }
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -768,7 +791,7 @@
         async function addExpense() {
             const desc = document.getElementById('new-expense-desc').value;
             const amount = document.getElementById('new-expense-amount').value;
-            if(!desc || !amount) return showModal("Missing Info", "Please provide description and amount.", "warning");
+            if(!desc || !amount) return showToast("Please provide description and amount.", 'warning');
             try {
                 const response = await fetch(`${API_URL}/api/expenditures`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -844,7 +867,7 @@
             const el = document.getElementById(id);
             el.innerText = value.toLocaleString('en-KE', { minimumFractionDigits: 2 });
             el.parentElement.style.animation = 'none';
-            el.parentElement.offsetHeight; // trigger reflow
+            el.parentElement.offsetHeight;
             el.parentElement.style.animation = 'countUp 0.5s ease';
         }
 
@@ -896,7 +919,7 @@
                 (p.barcode || '').includes(inventorySearchQuery)
             );
             if(filtered.length === 0) { 
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-dim); padding: 24px;">No products found.</td></tr>'; 
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--text-dim); padding: 24px;">No products found.</td></tr>'; 
                 return; 
             }
             filtered.forEach(product => {
@@ -904,15 +927,22 @@
                 const stockColor = stockLvl < 10 ? 'var(--danger)' : 'var(--primary)';
                 const safeName = product.name.replace(/'/g, "\'");
                 const buyPrice = product.buying_price || 0;
+                const zeroPrice = !product.price || product.price === 0;
+
+                const imgHtml = product.image 
+                    ? `<img src="${product.image}" class="product-thumb" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="display:block;"><div class="product-thumb-avatar" style="display:none; background: ${getProductColor(product.name)};">${product.name.substring(0,2).toUpperCase()}</div>`
+                    : `<div class="product-thumb-avatar" style="background: ${getProductColor(product.name)};">${product.name.substring(0,2).toUpperCase()}</div>`;
+
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-product-id', product._id);
                 tr.innerHTML = `
+                    <td>${imgHtml}</td>
                     <td><strong>${product.name}</strong></td>
                     <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-dim);">${product.barcode || '—'}</td>
                     <td style="text-transform:capitalize; color: var(--text-muted);">${product.type}</td>
                     <td style="font-weight: 700; font-size: 16px; color: ${stockColor}; font-family: 'JetBrains Mono', monospace;">${stockLvl}</td>
                     <td><input type="number" class="inv-input" id="buy-${product._id}" value="${buyPrice}" placeholder="BP"></td>
-                    <td><input type="number" class="inv-input" id="sell-${product._id}" value="${product.price}" placeholder="SP"></td>
+                    <td><input type="number" class="inv-input" id="sell-${product._id}" value="${product.price}" placeholder="SP" style="${zeroPrice ? 'border-color: var(--warning);' : ''}"></td>
                     <td style="white-space:nowrap;">
                         <button class="btn btn-save" onclick="updateProduct('${product._id}')">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -934,7 +964,7 @@
                     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ price: sellPrice, buying_price: buyPrice, cashierName: 'Admin' })
                 });
-                if((await res.json()).success) { showModal("Success", "Prices updated!", "success"); loadAllData(); }
+                if((await res.json()).success) { showToast("Prices updated!", 'success'); loadAllData(); }
             } catch(e) { console.error(e); }
         }
 
@@ -990,14 +1020,14 @@
             const name = document.getElementById('new-user-name').value;
             const role = document.getElementById('new-user-role').value;
             const pin = document.getElementById('new-user-pin').value;
-            if(!name || !pin) return showModal("Missing Info", "Please fill in all fields.", "warning");
+            if(!name || !pin) return showToast("Please fill in all fields.", 'warning');
             try {
                 const response = await fetch(`${API_URL}/api/staff`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: name, role, pin })
                 });
                 const data = await response.json();
-                if(data.success) { document.getElementById('new-user-name').value=''; document.getElementById('new-user-pin').value=''; fetchUsers(); showModal("Success", "User added!", "success"); }
+                if(data.success) { document.getElementById('new-user-name').value=''; document.getElementById('new-user-pin').value=''; fetchUsers(); showToast("User added!", 'success'); }
                 else showModal("Error", data.message, "error");
             } catch(e) { console.error(e); }
         }
@@ -1018,7 +1048,7 @@
         async function changePassword(id, username) {
             const newPassword = prompt(`New password for ${username}:`);
             if(!newPassword) return;
-            try { const res = await fetch(`${API_URL}/api/staff/${id}/password`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({newPin:newPassword}) }); if((await res.json()).success) showModal("Success", "Password updated!", "success"); }
+            try { const res = await fetch(`${API_URL}/api/staff/${id}/password`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({newPin:newPassword}) }); if((await res.json()).success) showToast("Password updated!", 'success'); }
             catch(e){}
         }
 
